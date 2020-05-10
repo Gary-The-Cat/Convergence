@@ -60,7 +60,7 @@ namespace Game
         public static FloatRect FourPlayerBottomRight => new FloatRect(0.5f, 0.5f, 0.5f, 0.5f);
 
         // WARNING: Towns may overlap as there is no logic for their placement.
-        public static bool UseRandomTowns => true;
+        public static bool UseRandomTowns => false;
 
         // NOTE: TownCount only applies when using random towns.
         public static int RandomTownCount => 50;
