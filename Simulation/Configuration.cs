@@ -13,6 +13,8 @@ namespace Game
 
         public static uint Width => (uint)(3840 * Scale);
 
+        public static double MutationChance => 0.05;
+
         public static Color Background => new Color(233, 233, 233);
 
         public static bool AllowCameraMovement => true;
@@ -63,7 +65,7 @@ namespace Game
         public static bool UseRandomTowns => false;
 
         // NOTE: TownCount only applies when using random towns.
-        public static int RandomTownCount => 50;
+        public static int RandomTownCount => 30;
 
         public static int TownCount => UseRandomTowns ? RandomTownCount : TownHelper.TownPositions.Count;
     }

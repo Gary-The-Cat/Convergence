@@ -7,20 +7,7 @@ namespace Game.GeneticAlgorithm
 {
     public class World
     {
-        public const int PopulationCount = 1000;
-
-        public List<double> FitnessOverTime { get; private set; }
-
-        private int generationCount;
-
-        private int noImprovementCount;
-
-        private double previousFitness;
-
-        public bool HasConverged => 
-               generationCount > GAConfig.MaxGenerations
-            || noImprovementCount > GAConfig.MaxNoImprovement;
-
+        public const int PopulationCount = 100;
         private static List<double> cumulativeProportions;
         private static Random random = new Random();
 
@@ -30,11 +17,6 @@ namespace Game.GeneticAlgorithm
         {
             Population = new List<Individual>();
             cumulativeProportions = new List<double>();
-            FitnessOverTime = new List<double>();
-
-            generationCount = 0;
-            noImprovementCount = 0;
-            previousFitness = double.MaxValue;
         }
 
         public void Spawn()
@@ -60,9 +42,7 @@ namespace Game.GeneticAlgorithm
 
         public void DoGeneration()
         {
-            this.generationCount++;
-
-            // We are about t 
+            // We are about to do a generation, so perform the proportion calculations up front
             this.UpdateCumulativeProportions();
 
             // Create a list to hold our new offspring
@@ -97,59 +77,78 @@ namespace Game.GeneticAlgorithm
 
             // Take the best 'PopulationCount' worth of individuals
             Population = Population.OrderBy(i => i.GetFitness()).Take(PopulationCount).ToList();
-
-            // Grab the fittest individual in the population
-            var bestIndividualFitness = Population.First().GetFitness();
-
-            // Record this fitness value
-            FitnessOverTime.Add(bestIndividualFitness);
-
-            if(previousFitness == bestIndividualFitness)
-            {
-                noImprovementCount++;
-            }
-            else
-            {
-                previousFitness = bestIndividualFitness;
-                noImprovementCount = 0;
-            }
         }
 
-        private (Individual offspringA, Individual offspringB) Mutate(Individual offspringA, Individual offspringB)
+        private (Individual, Individual) Mutate(Individual individualA, Individual individualB)
         {
-            var newOffspringA = new Individual(offspringA.Sequence);
-            var newOffspringB = new Individual(offspringB.Sequence);
+            // Grab a copy of our individual in its current state, not the most efficient way
+            // but certainly a very testable way.
+            var newIndividualA = new Individual(individualA.Sequence);
+            var newindividualB = new Individual(individualB.Sequence);
 
-            if (random.NextDouble() < GAConfig.MutationChance)
+            // Generate a number between 0-1, if it is lower than our mutation chance (0.05 - 5%), mutate!
+            if (random.NextDouble() < Configuration.MutationChance)
             {
-                newOffspringA = Mutate(offspringA);
+                newIndividualA = DoMutate(individualA);
             }
 
-            if (random.NextDouble() < GAConfig.MutationChance)
+            // Generate a number between 0-1, if it is lower than our mutation chance (0.05 - 5%), mutate!
+            if (random.NextDouble() < Configuration.MutationChance)
             {
-                newOffspringB = Mutate(offspringB);
+                newindividualB = DoMutate(individualB);
             }
 
-            return (newOffspringA, newOffspringB);
+            return (newIndividualA, newindividualB);
         }
 
-        private Individual Mutate(Individual offspringA)
+        private Individual DoMutate(Individual individual)
         {
+            // Half the time, use one mutation method, and other half use the other.
             if (random.NextDouble() > 0.5)
             {
-                return SwapMutate(offspringA);
+                return DoSwapMutate(individual);
             }
             else
             {
-                // do rotate mutate
-                return RotateMutate(offspringA);
+                return DoRotateMutate(individual);
             }
         }
 
-        private Individual SwapMutate(Individual individual)
+        private Individual DoRotateMutate(Individual individual)
         {
+            // Grab two unique towns
+            var (townA, townB) = GetUniqueTowns();
+
+            // Grab a reference to the sequence - just to make code below tidier
+            var sequence = individual.Sequence;
+
+            // Determine which of the indices chosen comes before the other
+            int firstIndex = townA > townB ? townA : townB;
+            int secondIndex = townA > townB ? townB : townA;
+
+            // Grab the head of the sequence
+            var newSequence = sequence.Take(firstIndex).ToList();
+
+            // Grab the centre and rotate it
+            var middle = sequence.Skip(firstIndex).Take(secondIndex - firstIndex).Reverse();
+
+            // Grab the end of the sequence
+            var end = sequence.Skip(secondIndex).ToList();
+
+            // Add all components of the new sequence together
+            newSequence.AddRange(middle);
+            newSequence.AddRange(end);
+
+            // Return a new individual with our new sequence
+            return new Individual(newSequence);
+        }
+
+        private Individual DoSwapMutate(Individual individual)
+        {
+            // Grab a copy of our current sequence
             var sequence = individual.Sequence.ToList();
 
+            // Get the indices of the towns we want to swap
             var (townA, townB) = GetUniqueTowns();
 
             sequence.SwapInPlace(townA, townB);
@@ -157,28 +156,13 @@ namespace Game.GeneticAlgorithm
             return new Individual(sequence);
         }
 
-        private Individual RotateMutate(Individual individual)
-        {
-            var (townA, townB) = GetUniqueTowns();
-
-            var firstIndex = townA < townB ? townA : townB;
-            var secondIndex = townA < townB ? townB : townA;
-
-            var newSequence = individual.Sequence.Take(firstIndex).ToList();
-            var middle = individual.Sequence.Skip(firstIndex).Take(secondIndex - firstIndex).Reverse();
-            var tail = individual.Sequence.Skip(secondIndex);
-
-            newSequence.AddRange(middle);
-            newSequence.AddRange(tail);
-
-            return new Individual(newSequence);
-        }
-
         private (int, int) GetUniqueTowns()
         {
+            // Randomly select two towns
             var townA = random.Next(Configuration.TownCount);
             var townB = random.Next(Configuration.TownCount);
 
+            // Ensure that the two towns are not the same
             while (townB == townA)
             {
                 townB = random.Next(Configuration.TownCount);

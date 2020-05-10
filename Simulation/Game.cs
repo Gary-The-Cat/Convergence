@@ -4,9 +4,6 @@ using SFML.Graphics;
 using SFML.System;
 using SFML.Window;
 using System;
-using System.Threading;
-using System.Windows;
-using System.Windows.Threading;
 
 namespace Game
 {
@@ -25,7 +22,7 @@ namespace Game
             // Create the main window
             window = new RenderWindow(
                 new VideoMode(Configuration.Width, Configuration.Height), 
-                "Simulation", 
+                "World Simulation", 
                 Styles.Fullscreen,
                 new ContextSettings() { AntialiasingLevel = 8 });
 
@@ -53,11 +50,11 @@ namespace Game
 
         public void Run()
         {
+            // Spawn our initial populaiton of individuals
             world.Spawn();
 
             generationClock.Restart();
 
-            Thread.Sleep(3000);
             while (window.IsOpen)
             {
                 // Get the amount of time that has passed since we drew the last frame.
@@ -81,8 +78,7 @@ namespace Game
                 window.Display();
 
                 // If one second has passed, breed the next generation
-                if(generationClock.ElapsedTime.AsSeconds() > generationTime
-                    && !world.HasConverged)
+                if(generationClock.ElapsedTime.AsSeconds() > generationTime)
                 {
                     // Do one generation of breeding & culling.
                     world.DoGeneration();
@@ -90,17 +86,8 @@ namespace Game
                     // Restart our generation timer
                     generationClock.Restart();
 
+                    // Update the screen to show the new generation
                     screen.GenerationString.StringText = $"Generation: {generation++}";
-                }
-
-                if(world.HasConverged)
-                {
-                    screen.SetGACompleted();
-                    Dispatcher.CurrentDispatcher.Invoke(() =>
-                    {
-                        Clipboard.SetText(string.Join<double>(",", world.FitnessOverTime), TextDataFormat.UnicodeText);
-                    });
-                    
                 }
 
                 // Check to see if the user has pressed the quit key.

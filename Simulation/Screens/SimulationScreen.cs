@@ -7,7 +7,6 @@ using Game.GeneticAlgorithm;
 using Game.ViewTools;
 using Game.ExtensionMethods;
 using SFML.System;
-using System;
 
 namespace Game.Screens
 {
@@ -102,11 +101,6 @@ namespace Game.Screens
 
             // Draw the 'Press Q to quit' message
             window.DrawString(quitString, new Vector2f(450, Configuration.Height - 100));
-        }
-
-        public void SetGACompleted()
-        {
-            totalDistanceString.TextColour = Color.Green;
         }
     }
 }
