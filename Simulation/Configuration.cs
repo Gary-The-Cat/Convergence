@@ -13,8 +13,6 @@ namespace Game
 
         public static uint Width => (uint)(3840 * Scale);
 
-        public static double MutationChance => 0.05;
-
         public static Color Background => new Color(233, 233, 233);
 
         public static bool AllowCameraMovement => true;
@@ -28,6 +26,9 @@ namespace Game
 
         // Quit Key
         public static Keyboard.Key QuitKey => Keyboard.Key.Q;
+
+        // Pareto Visulisation Key
+        public static Keyboard.Key ParetoVisualisationKey => Keyboard.Key.Space;
 
         // Camera Controls
         public static Key PanLeft => Key.A;
@@ -48,6 +49,8 @@ namespace Game
 
         // Screen Size / Layouts
         public static FloatRect SinglePlayer => new FloatRect(0, 0, 1, 1);
+
+        public static FloatRect SinglePlayerCentered => new FloatRect(0.25f, 0.25f, 0.5f, 0.5f);
 
         public static FloatRect TwoPlayerLeft => new FloatRect(0, 0, 0.5f, 1);
 

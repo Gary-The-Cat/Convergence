@@ -13,19 +13,16 @@ namespace Game.ExtensionMethods
             window.Draw(texture);
         }
 
-        public static void DrawString(this RenderWindow window, FontText textFont, Vector2f position, bool centre = true)
+        public static void DrawString(this RenderWindow window, FontText fontText, bool centre = true)
         {
-            var text = new Text(textFont.StringText, textFont.Font);
+            var text = new Text(fontText.StringText, fontText.Font);
             var size = text.GetLocalBounds();
-            var scale = textFont.Scale;
+            var scale = fontText.Scale;
             var textWidth = size.Width * scale;
             var textHeight = size.Height * scale;
             text.Scale = new Vector2f(scale, scale);
-            text.Position = centre
-                ? new Vector2f(position.X - textWidth / 2, position.Y - textHeight / 2)
-                : new Vector2f(position.X, position.Y);
-            text.FillColor = textFont.TextColour;
-            text.OutlineColor = textFont.TextColour;
+            text.FillColor = fontText.TextColour;
+            text.OutlineColor = fontText.TextColour;
             window.Draw(text);
         }
     }

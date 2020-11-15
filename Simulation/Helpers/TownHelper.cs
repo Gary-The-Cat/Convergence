@@ -10,6 +10,9 @@ namespace Game.Helpers
     {
         private const int Linethickness = 4;
         private const int PathOffsetFromTown = 180;
+        private const int MinimumSpeedInPixels = 10;
+        private const int MaximumSpeedInPixels = 100;
+        private const int SpeedRangeInPixels = MaximumSpeedInPixels - MinimumSpeedInPixels;
         private static Random random = new Random();
 
         /// <summary>
@@ -47,12 +50,45 @@ namespace Game.Helpers
             return paths;
         }
 
-        public static void PopulateTowns()
+        public static void Initialize()
+        {
+            PopulateTowns();
+            PopulateSpeedLimits();
+        }
+
+        private static void PopulateSpeedLimits()
+        {
+            var localRandom = new Random(17);
+            PathSpeedLimits = new Dictionary<(int, int), float>();
+
+            for (int fromTown = 0; fromTown < Configuration.TownCount; fromTown++)
+            {
+                for (int toTown = 0; toTown < Configuration.TownCount; toTown++)
+                {
+                    // If our from town is our to town, no need to calculate a path
+                    if (fromTown == toTown)
+                    {
+                        continue;
+                    }
+
+                    // Calculate the path distance as speed is distance dependent
+                    var pathDistance = TownPositions[toTown].Distance(TownPositions[fromTown]);
+
+                    // Add the speed for this directional path
+                    PathSpeedLimits.Add(
+                        (fromTown, toTown), 
+                        (float)(MinimumSpeedInPixels + SpeedRangeInPixels * localRandom.NextDouble() * pathDistance / 1000));
+                }
+            }
+        }
+
+        private static void PopulateTowns()
         {
             if (Configuration.UseRandomTowns)
             {
                 for(int i = 0; i < Configuration.RandomTownCount; i++)
                 {
+                    // Note that random town placements can overlap
                     TownPositions.Add(GeneratRandomTownPosition());
                 }
             }
@@ -76,6 +112,8 @@ namespace Game.Helpers
         /// should not impact you if you have a smaller screen as it should scale!
         /// </summary>
         public static List<Vector2f> TownPositions = new List<Vector2f>();
+
+        public static Dictionary<(int, int), float> PathSpeedLimits { get; set; }
 
         private static List<Vector2f> townPositions = new List<Vector2f>()
         {
