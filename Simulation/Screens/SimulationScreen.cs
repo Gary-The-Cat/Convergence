@@ -56,9 +56,9 @@ namespace Game.Screens
             Camera = new Camera(Configuration.SinglePlayer);
 
             // Create a 'FontText' which is a simple wrapper to easily draw text to the screen.
-            totalDistanceString = new FontText(new Font("font.ttf"), string.Empty, Color.Black, 3);
-            GenerationString = new FontText(new Font("font.ttf"), $"Generation: {0}", Color.Black, 3);
-            quitString = new FontText(new Font("font.ttf"), "Press 'Q' to quit.", Color.Black, 3);
+            totalDistanceString = new FontText(new Font("Resources/font.ttf"), string.Empty, Color.Black, 3);
+            GenerationString = new FontText(new Font("Resources/font.ttf"), $"Generation: {0}", Color.Black, 3);
+            quitString = new FontText(new Font("Resources/font.ttf"), "Press 'Q' to quit.", Color.Black, 3);
         }
 
         /// <summary>

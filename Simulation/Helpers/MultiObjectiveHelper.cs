@@ -30,7 +30,7 @@ namespace Game.Helpers
 
             CalculateRank(population);
 
-            // For each rank, calculate the crowdding distance for each individual
+            // For each rank, calculate the crowding distance for each individual
             var ranks = population.GroupBy(p => p.Rank);
             foreach (var singleRank in ranks)
             {
@@ -51,7 +51,7 @@ namespace Game.Helpers
 
                 foreach (var individualB in population)
                 {
-                    if(individualA == individualB)
+                    if (individualA == individualB)
                     {
                         continue;
                     }
@@ -77,17 +77,16 @@ namespace Game.Helpers
             while (currentFront.Any())
             {
                 var nextFront = new List<Individual>();
-                foreach(var individualA in currentFront)
+                foreach (var individualA in currentFront)
                 {
-                    foreach(var individualB in individualsDominated[individualA])
+                    foreach (var individualB in individualsDominated[individualA])
                     {
                         individualDominationCount[individualB]--;
-                        if(individualDominationCount[individualB] == 0)
+                        if (individualDominationCount[individualB] == 0)
                         {
                             individualB.Rank = i + 1;
                             nextFront.Add(individualB);
                         }
-
                     }
                 }
                 i++;
@@ -98,17 +97,12 @@ namespace Game.Helpers
 
         public static bool Dominates(Individual a, Individual b)
         {
-            if (a.DistanceFitness < b.DistanceFitness &&
-                a.TimeFitness < b.TimeFitness )
-            {
-                return true;
-            }
-
-            return false;
+            return (a.DistanceFitness < b.DistanceFitness && a.TimeFitness <= b.TimeFitness) ||
+                   (a.DistanceFitness <= b.DistanceFitness && a.TimeFitness < b.TimeFitness);
         }
 
         /// <summary>
-        /// Calculations for crowsing distance must be done on normalized fitness values to stop
+        /// Calculations for crowding distance must be done on normalized fitness values to stop
         /// biasing towards an objective with a larger absolute fitness value.
         /// </summary>
         /// <param name="population"></param>
@@ -117,66 +111,46 @@ namespace Game.Helpers
             var maxDistance = population.Max(i => i.DistanceFitness);
             var maxTime = population.Max(i => i.TimeFitness);
 
-            population.ForEach(i => i.NormalizedDistanceFitness = i.DistanceFitness / maxDistance);
-            population.ForEach(i => i.NormalizedTimeFitness = i.TimeFitness / maxTime);
+            population.ForEach(i =>
+            {
+                i.NormalizedDistanceFitness = maxDistance == 0 ? 0 : i.DistanceFitness / maxDistance;
+                i.NormalizedTimeFitness = maxTime == 0 ? 0 : i.TimeFitness / maxTime;
+            });
         }
 
         private static void CalculateCrowdingDistance(IGrouping<int, Individual> singleRank)
         {
-            // As we only have two objectives, ordering individuals along one front allows us to make assumptions
-            // about the locations of the neighbouring individuals in the array.
-            var orderedIndividuals = singleRank.Select(i => i).OrderBy(i => i.NormalizedDistanceFitness).ToArray();
-            var individualsInFront = orderedIndividuals.Count();
+            var orderedByDistance = singleRank.OrderBy(i => i.NormalizedDistanceFitness).ToArray();
+            var orderedByTime = singleRank.OrderBy(i => i.NormalizedTimeFitness).ToArray();
+            var individualsInFront = orderedByDistance.Length;
 
-            for (int i = 0; i < individualsInFront; i++)
+            foreach (var individual in singleRank)
             {
-                // If we are at the start or end of a front, it should have infinite crowding distance
-                if (i == 0 || i == individualsInFront - 1)
-                {
-                    orderedIndividuals[i].CrowdingDistance = double.PositiveInfinity;
-                }
-                else
-                {
-                    // Grab a reference to each individual to make the next section a bit cleaner.
-                    var current = orderedIndividuals[i];
-                    var left = orderedIndividuals[i - 1];
-                    var right = orderedIndividuals[i + 1];
-
-                    // Get the positions on the 2D fitness graph, where time is our X axis and distance is our Y.
-                    var currentPosition = new Vector2f(current.NormalizedTimeFitness, current.NormalizedDistanceFitness);
-                    var leftPosition = new Vector2f(left.NormalizedTimeFitness, left.NormalizedDistanceFitness);
-                    var rightPosition = new Vector2f(right.NormalizedTimeFitness, right.NormalizedDistanceFitness);
-
-                    // Calculate the distance to the neighbourn on each side
-                    var distanceLeft = currentPosition.Distance(leftPosition);
-                    var distanceRight = currentPosition.Distance(rightPosition);
-
-                    // Set the crowding distance for the current individual
-                    orderedIndividuals[i].CrowdingDistance = Math.Pow(distanceLeft + distanceRight, 2);
-                }
-            }
-        }
-
-        private static bool IsNotDominated(Individual individualA, List<Individual> remainingToBeRanked)
-        {
-            // Loop over each individual and check if it dominates this individual.
-            foreach (var individualB in remainingToBeRanked)
-            {
-                if (individualA == individualB)
-                {
-                    continue;
-                }
-
-                // If this individual is at least better than us in one objective and equal in another,
-                // then we are dominated by this individual
-                if (individualB.DistanceFitness <= individualA.DistanceFitness &&
-                    individualB.TimeFitness <= individualA.TimeFitness)
-                {
-                    return false;
-                }
+                individual.CrowdingDistance = 0;
             }
 
-            return true;
+            if (individualsInFront > 0)
+            {
+                orderedByDistance[0].CrowdingDistance = double.PositiveInfinity;
+                orderedByDistance[individualsInFront - 1].CrowdingDistance = double.PositiveInfinity;
+
+                orderedByTime[0].CrowdingDistance = double.PositiveInfinity;
+                orderedByTime[individualsInFront - 1].CrowdingDistance = double.PositiveInfinity;
+            }
+
+            for (int i = 1; i < individualsInFront - 1; i++)
+            {
+                double distanceFitnessDifference = (orderedByDistance[i + 1].NormalizedDistanceFitness - orderedByDistance[i].NormalizedDistanceFitness) +
+                                                   (orderedByDistance[i].NormalizedDistanceFitness - orderedByDistance[i - 1].NormalizedDistanceFitness);
+                orderedByDistance[i].CrowdingDistance += distanceFitnessDifference;
+            }
+
+            for (int i = 1; i < individualsInFront - 1; i++)
+            {
+                double timeFitnessDifference = (orderedByTime[i + 1].NormalizedTimeFitness - orderedByTime[i].NormalizedTimeFitness) +
+                                               (orderedByTime[i].NormalizedTimeFitness - orderedByTime[i - 1].NormalizedTimeFitness);
+                orderedByTime[i].CrowdingDistance += timeFitnessDifference;
+            }
         }
     }
 }

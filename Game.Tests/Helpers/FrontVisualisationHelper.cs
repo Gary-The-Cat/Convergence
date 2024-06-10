@@ -1,10 +1,9 @@
 ﻿using Game.GeneticAlgorithm;
 using Game.Screens;
-using SFML.Graphics;
-using SFML.System;
-using SFML.Window;
 using System.Collections.Generic;
 using System.Threading;
+using SFML.Graphics;
+using SFML.Window;
 
 namespace Game.Tests.Helpers
 {
@@ -27,8 +26,8 @@ namespace Game.Tests.Helpers
 
             var paretoScreen = new ParetoVisualScreen(window, Configuration.SinglePlayer, population); 
             
-            paretoScreen.Camera.SetCentre(new Vector2f(1880, 950));
-            paretoScreen.Camera.GetView().Zoom(0.15f);
+            paretoScreen.Camera.SetCentre(new SFML.System.Vector2f(1880, 950));
+            paretoScreen.Camera.GetView().Zoom(0.5f);
 
             paretoScreen.Update(2f);
             window.SetView(paretoScreen.Camera.GetView());
@@ -43,6 +42,8 @@ namespace Game.Tests.Helpers
                 // Process events
                 window.DispatchEvents();
 
+                paretoScreen.Update(0.16f);
+                paretoScreen.Camera.Update(0.05f);
                 paretoScreen.Draw(0.16f);
                 window.Display();
 

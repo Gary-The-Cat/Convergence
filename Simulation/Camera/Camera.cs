@@ -41,31 +41,49 @@ namespace Game.ViewTools
 
             // Translation
             if (Keyboard.IsKeyPressed(Configuration.PanUp))
+            {
                 offset.Y -= Configuration.CameraMovementSpeed * deltaT;
+            }
 
             if (Keyboard.IsKeyPressed(Configuration.PanLeft))
+            {
                 offset.X -= Configuration.CameraMovementSpeed * deltaT / ratio;
+            }
 
             if (Keyboard.IsKeyPressed(Configuration.PanDown))
+            {
                 offset.Y += Configuration.CameraMovementSpeed * deltaT;
+            }
 
             if (Keyboard.IsKeyPressed(Configuration.PanRight))
+            {
                 offset.X += Configuration.CameraMovementSpeed * deltaT / ratio;
+            }
 
             // Zoom
             if (Keyboard.IsKeyPressed(Configuration.ZoomIn))
+            {
                 this.Zoom += Configuration.CameraZoomSpeed * deltaT;
+            }
             else if (Keyboard.IsKeyPressed(Configuration.ZoomOut))
+            {
                 this.Zoom -= Configuration.CameraZoomSpeed * deltaT;
+            }
             else
+            {
                 this.Zoom = 1;
+            }
 
             // Rotation
             if (Keyboard.IsKeyPressed(Configuration.RotateLeft))
+            {
                 this.Rotation -= Configuration.CameraRotationSpeed * deltaT;
+            }
 
             if (Keyboard.IsKeyPressed(Configuration.RotateRight))
+            {
                 this.Rotation += Configuration.CameraRotationSpeed * deltaT;
+            }
 
             // Update all the things we just calculated.
             this.Position += offset;

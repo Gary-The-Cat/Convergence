@@ -5,6 +5,7 @@ using SFML.Graphics;
 using SFML.System;
 using SFML.Window;
 using System;
+using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
@@ -78,8 +79,6 @@ namespace Game
             // Spawn our initial populaiton of individuals
             world.Spawn();
 
-            Thread.Sleep(3000);
-
             // Set our generation count to zero and restart our timer
             int generation = 0;
             generationClock.Restart();
@@ -120,7 +119,8 @@ namespace Game
                         pathScreen.GenerationString.StringText = $"Generation: {++generation}";
 
                         // Draw the paths of the current best individual
-                        pathScreen.UpdateSequence(world.GetBestIndividual());
+                        var best = world.GetBestIndividual();
+                        pathScreen.UpdateSequence(best);
 
                         // Update all the screen components that are unrelated to our sequence.
                         screenManager.Update(deltaT);
@@ -135,7 +135,7 @@ namespace Game
                     pathScreen.SetGACompleted();
 
                     // Copy the fitness to clipboard
-                    Clipboard.SetText(string.Join(",", world.FitnessOverTime));
+                    System.Windows.Clipboard.SetText(string.Join(",", world.FitnessOverTime));
                 }
 
                 // Process any key presses that the user has made.

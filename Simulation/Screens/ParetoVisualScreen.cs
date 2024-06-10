@@ -46,7 +46,7 @@ namespace Game.Screens
             // This could just be a sprite, but this works.
             this.fitnessGraph = new RectangleShape(new Vector2f(960, 960))
             {
-                Texture = new Texture("Graph.png"),
+                Texture = new Texture("Resources/Graph.png"),
                 Position = new Vector2f(1400, 500)
             };
 
@@ -101,6 +101,8 @@ namespace Game.Screens
 
         public override void Draw(float deltaT)
         {
+            window.SetView(this.Camera.GetView());
+
             // Draw the fitness backgrop & outline
             window.Draw(this.fitnessGraphBackdrop);
 

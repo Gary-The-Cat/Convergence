@@ -15,6 +15,59 @@ namespace Game.Helpers
         private const int SpeedRangeInPixels = MaximumSpeedInPixels - MinimumSpeedInPixels;
         private static Random random = new Random();
 
+        public static List<Vector2f> TownPositions { get; private set; }
+
+        public static Dictionary<(int, int), float> PathSpeedLimits { get; private set; }
+
+        /// <summary>
+        /// Static constructor to initialize static properties.
+        /// </summary>
+        static TownHelper()
+        {
+            TownPositions = new List<Vector2f>();
+            PathSpeedLimits = new Dictionary<(int, int), float>();
+        }
+
+        /// <summary>
+        /// Initializes the TownHelper with predefined towns and speed limits.
+        /// </summary>
+        /// <param name="userPredefinedPositions">The list of predefined towns.</param>
+        /// <param name="useRandomTowns">Flag indicating whether to use random towns.</param>
+        public static void Initialize(List<Vector2f> userPredefinedPositions = null)
+        {
+            TownPositions.Clear();
+            PathSpeedLimits.Clear();
+
+            if (Configuration.UseRandomTowns)
+            {
+                PopulateRandomTowns(Configuration.RandomTownCount);
+            }
+            else if (userPredefinedPositions != null)
+            {
+                TownPositions.AddRange(userPredefinedPositions);
+            }
+            else
+            {
+                var defaultPositions = new List<Vector2f>()
+                {
+                    new Vector2f(3060, 1300),
+                    new Vector2f(1050, 450),
+                    new Vector2f(450, 750),
+                    new Vector2f(690, 1890),
+                    new Vector2f(1410, 1830),
+                    new Vector2f(2070, 1560),
+                    new Vector2f(1725, 1080),
+                    new Vector2f(3360, 810),
+                    new Vector2f(3450, 1770),
+                    new Vector2f(2460, 240),
+                };
+
+                TownPositions.AddRange(defaultPositions);
+            }
+
+            PopulateSpeedLimits();
+        }
+
         /// <summary>
         /// To draw the path of our current sequence, we have to create a bunch of convex shapes.
         /// SFML has a native way to draw lines, but they are 1px wide, and do not show up well
@@ -26,7 +79,7 @@ namespace Game.Helpers
         {
             var paths = new List<ConvexShape>();
 
-            for(int i = 1; i < townSequence.Count; i++)
+            for (int i = 1; i < townSequence.Count; i++)
             {
                 // Get the two towns that our line will be joining
                 var fromTown = TownPositions[townSequence[i - 1]];
@@ -50,20 +103,13 @@ namespace Game.Helpers
             return paths;
         }
 
-        public static void Initialize()
-        {
-            PopulateTowns();
-            PopulateSpeedLimits();
-        }
-
         private static void PopulateSpeedLimits()
         {
             var localRandom = new Random(17);
-            PathSpeedLimits = new Dictionary<(int, int), float>();
 
-            for (int fromTown = 0; fromTown < Configuration.TownCount; fromTown++)
+            for (int fromTown = 0; fromTown < TownPositions.Count; fromTown++)
             {
-                for (int toTown = 0; toTown < Configuration.TownCount; toTown++)
+                for (int toTown = 0; toTown < TownPositions.Count; toTown++)
                 {
                     // If our from town is our to town, no need to calculate a path
                     if (fromTown == toTown)
@@ -76,29 +122,22 @@ namespace Game.Helpers
 
                     // Add the speed for this directional path
                     PathSpeedLimits.Add(
-                        (fromTown, toTown), 
+                        (fromTown, toTown),
                         (float)(MinimumSpeedInPixels + SpeedRangeInPixels * localRandom.NextDouble() * pathDistance / 1000));
                 }
             }
         }
 
-        private static void PopulateTowns()
+        private static void PopulateRandomTowns(int randomTownCount)
         {
-            if (Configuration.UseRandomTowns)
+            for (int i = 0; i < randomTownCount; i++)
             {
-                for(int i = 0; i < Configuration.RandomTownCount; i++)
-                {
-                    // Note that random town placements can overlap
-                    TownPositions.Add(GeneratRandomTownPosition());
-                }
-            }
-            else
-            {
-                TownPositions.AddRange(townPositions);
+                // Note that random town placements can overlap
+                TownPositions.Add(GenerateRandomTownPosition());
             }
         }
 
-        private static Vector2f GeneratRandomTownPosition()
+        private static Vector2f GenerateRandomTownPosition()
         {
             return new Vector2f
             {
@@ -106,27 +145,5 @@ namespace Game.Helpers
                 Y = 100 + ((float)random.NextDouble() * (Configuration.Height - 100))
             };
         }
-
-        /// <summary>
-        /// Hard coded town positions - They are hard coded for a 4K screen space, but with the new camera system this 
-        /// should not impact you if you have a smaller screen as it should scale!
-        /// </summary>
-        public static List<Vector2f> TownPositions = new List<Vector2f>();
-
-        public static Dictionary<(int, int), float> PathSpeedLimits { get; set; }
-
-        private static List<Vector2f> townPositions = new List<Vector2f>()
-        {
-            new Vector2f(3060, 1300),
-            new Vector2f(1050, 450),
-            new Vector2f(450, 750),
-            new Vector2f(690, 1890),
-            new Vector2f(1410, 1830),
-            new Vector2f(2070, 1560),
-            new Vector2f(1725, 1080),
-            new Vector2f(3360, 810),
-            new Vector2f(3450, 1770),
-            new Vector2f(2460, 240),
-        };
     }
 }

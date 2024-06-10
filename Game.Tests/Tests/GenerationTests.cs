@@ -8,35 +8,39 @@ using System.Linq;
 
 namespace Game.Tests
 {
-    [TestClass()]
+    [TestClass]
     public class GenerationTests
     {
-        [TestMethod()]
-        public void GenerateIndividualTest()
+        [TestInitialize]
+        public void SetUp()
         {
             TownHelper.Initialize();
+        }
 
+        [TestMethod]
+        public void GenerateIndividualTest()
+        {
             var individual = WorldHelper.GenerateIndividual(Configuration.TownCount);
 
             // Ensure that individual contains no repeated values
             var uniqueValueGroups = individual.Sequence.GroupBy(s => s);
-            Assert.IsTrue(uniqueValueGroups.All(g => g.Count() == 1));
+            Assert.IsTrue(uniqueValueGroups.All(g => g.Count() == 1), "The individual contains repeated values.");
         }
 
-        [TestMethod()]
+        [TestMethod]
         public void EnsureCandidateParentsUniqueTest()
         {
             var population = DefaultPopulationHelper.GetTestPopulation();
 
-            for(int i = 0; i < 10; i++)
+            for (int i = 0; i < 10; i++)
             {
                 var (candidateA, candidateB) = WorldHelper.GetCandidateParents(population);
 
-                Assert.IsFalse(candidateA.Sequence.SequenceEqual(candidateB.Sequence));
+                Assert.IsFalse(candidateA.Sequence.SequenceEqual(candidateB.Sequence), "Candidate parents are not unique.");
             }
         }
 
-        [TestMethod()]
+        [TestMethod]
         public void EnsureRankedTournamentSelectionTest()
         {
             var population = DefaultPopulationHelper.GetTestPopulation();
@@ -52,11 +56,11 @@ namespace Game.Tests
             var fitterIndividualA = WorldHelper.TournamentSelection(individualA, individualD);
             var fitterIndividualD = WorldHelper.TournamentSelection(individualD, individualA);
 
-            Assert.AreEqual(individualA, fitterIndividualA);
-            Assert.AreEqual(individualA, fitterIndividualD);
+            Assert.AreEqual(individualA, fitterIndividualA, "Tournament selection did not select the fitter individual.");
+            Assert.AreEqual(individualA, fitterIndividualD, "Tournament selection did not select the fitter individual.");
         }
 
-        [TestMethod()]
+        [TestMethod]
         public void EnsureCrowdingDistanceTournamentSelectionTest()
         {
             var population = DefaultPopulationHelper.GetTestPopulation();
@@ -72,15 +76,13 @@ namespace Game.Tests
             var fitterIndividualA = WorldHelper.TournamentSelection(individualA, individualB);
             var fitterIndividualB = WorldHelper.TournamentSelection(individualB, individualA);
 
-            Assert.AreEqual(individualA, fitterIndividualA);
-            Assert.AreEqual(individualA, fitterIndividualB);
+            Assert.AreEqual(individualA, fitterIndividualA, "Tournament selection did not select the individual with higher crowding distance.");
+            Assert.AreEqual(individualA, fitterIndividualB, "Tournament selection did not select the individual with higher crowding distance.");
         }
 
-        [TestMethod()]
+        [TestMethod]
         public void EnsureCrossoverTest()
         {
-            TownHelper.Initialize();
-
             var individualA = new Individual(new List<int> { 0, 9, 1, 8, 2, 7, 3, 6, 4, 5 });
             var individualB = new Individual(new List<int> { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 });
 
@@ -96,16 +98,16 @@ namespace Game.Tests
             var expectedChildBSequence = new List<int> { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 };
             var expectedChildCSequence = new List<int> { 0, 9, 1, 8, 2, 7, 3, 6, 4, 5 };
 
-            Assert.IsTrue(childA.Sequence.SequenceEqual(expectedChildASequence));
-            Assert.IsTrue(childB.Sequence.SequenceEqual(expectedChildBSequence));
-            Assert.IsTrue(childC.Sequence.SequenceEqual(expectedChildCSequence));
+            Assert.IsTrue(childA.Sequence.SequenceEqual(expectedChildASequence), "Child A sequence does not match the expected sequence.");
+            Assert.IsTrue(childB.Sequence.SequenceEqual(expectedChildBSequence), "Child B sequence does not match the expected sequence.");
+            Assert.IsTrue(childC.Sequence.SequenceEqual(expectedChildCSequence), "Child C sequence does not match the expected sequence.");
 
-            Assert.AreEqual(childA.Sequence.Count(), individualA.Sequence.Count());
-            Assert.AreEqual(childB.Sequence.Count(), individualA.Sequence.Count());
-            Assert.AreEqual(childC.Sequence.Count(), individualA.Sequence.Count());
+            Assert.AreEqual(childA.Sequence.Count, individualA.Sequence.Count, "Child A sequence length does not match the original.");
+            Assert.AreEqual(childB.Sequence.Count, individualA.Sequence.Count, "Child B sequence length does not match the original.");
+            Assert.AreEqual(childC.Sequence.Count, individualA.Sequence.Count, "Child C sequence length does not match the original.");
         }
 
-        [TestMethod()]
+        [TestMethod]
         public void EnsureUniqueTownsTest()
         {
             var sequence = new List<int> { 0, 9, 1, 2, 3, 4, 5, 6, 7, 8 };
@@ -114,44 +116,40 @@ namespace Game.Tests
             {
                 var (townA, townB) = WorldHelper.GetUniqueTowns(sequence);
 
-                Assert.AreNotEqual(townA, townB);
+                Assert.AreNotEqual(townA, townB, "Unique towns are not unique.");
             }
         }
 
-        [TestMethod()]
+        [TestMethod]
         public void EnsureRotationMutationResultTest()
         {
-            TownHelper.Initialize();
-
             var individual = new Individual(new List<int> { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 });
 
             var result = WorldHelper.DoRotateMutate(individual);
 
             // Ensure that all values are still in the list
             var distinctResultCount = result.Sequence.Distinct().Count();
-            Assert.AreEqual(distinctResultCount, 10);
+            Assert.AreEqual(distinctResultCount, 10, "Rotation mutation resulted in duplicate or missing values.");
 
             // Ensure that there are no duplicate entries
             var sequences = result.Sequence.GroupBy(s => s);
-            Assert.IsTrue(sequences.All(s => s.Count() == 1));
+            Assert.IsTrue(sequences.All(s => s.Count() == 1), "Rotation mutation resulted in duplicate values.");
         }
 
-        [TestMethod()]
+        [TestMethod]
         public void EnsureSwapMutationResultTest()
         {
-            TownHelper.Initialize();
-
             var individual = new Individual(new List<int> { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 });
 
             var result = WorldHelper.DoSwapMutate(individual);
 
             // Ensure that all values are still in the list
             var distinctResultCount = result.Sequence.Distinct().Count();
-            Assert.AreEqual(distinctResultCount, 10);
+            Assert.AreEqual(distinctResultCount, 10, "Swap mutation resulted in duplicate or missing values.");
 
             // Ensure that there are no duplicate entries
             var sequences = result.Sequence.GroupBy(s => s);
-            Assert.IsTrue(sequences.All(s => s.Count() == 1));
+            Assert.IsTrue(sequences.All(s => s.Count() == 1), "Swap mutation resulted in duplicate values.");
 
             // Perform manual swap to ensure result is correct
             var firstIndex = -1;
@@ -174,8 +172,7 @@ namespace Game.Tests
             var originalSequence = individual.Sequence.ToList();
             originalSequence.SwapInPlace(firstIndex, lastIndex);
 
-            Assert.IsTrue(originalSequence.SequenceEqual(result.Sequence));
+            Assert.IsTrue(originalSequence.SequenceEqual(result.Sequence), "Swap mutation did not produce the expected sequence.");
         }
     }
 }
-

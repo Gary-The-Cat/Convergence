@@ -24,7 +24,7 @@ namespace Game.GeneticAlgorithm
 
         public Individual(List<int> sequence)
         {
-            this.Sequence = sequence;
+            this.Sequence = sequence.ToList();
 
             DistanceFitness = GetTotalDistance();
             TimeFitness = GetTotalTime();
@@ -80,6 +80,12 @@ namespace Game.GeneticAlgorithm
             }
 
             return totalTime;
+        }
+
+        public void UpdateFitness()
+        {
+            DistanceFitness = GetTotalDistance();
+            TimeFitness = GetTotalTime();
         }
 
         public override bool Equals(object obj)

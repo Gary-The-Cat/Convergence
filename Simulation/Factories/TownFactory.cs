@@ -33,11 +33,11 @@ namespace Game.Factories
         {
             if (Configuration.UseRandomTowns)
             {
-                return $"../../Resources/Town_{random.Next(1, 10)}.png";
+                return $"Resources/Town_{random.Next(1, 10)}.png";
             }
             else
             {
-                return $"../../Resources/Town_{i + 1}.png";
+                return $"Resources/Town_{i + 1}.png";
             }
         }
     }
